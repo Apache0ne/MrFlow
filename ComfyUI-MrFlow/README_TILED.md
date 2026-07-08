@@ -6,6 +6,21 @@ This is an experimental memory-smart tiled add-on for very large MrFlow/Krea2-st
 
 A normal full-frame high-resolution refine can run out of VRAM at 2048, 3072, 4096, or larger. These nodes split the work into overlapping tiles, process one tile at a time, feather the overlaps, and clear cache between tiles.
 
+## Training-free policy
+
+The core path is training-free and does not require a learned latent upscaler.
+
+The intended workflow is:
+
+```text
+pixel-space upscale
+→ VAE re-encode
+→ controlled latent noise
+→ real model refine pass
+```
+
+A learned latent upscaler such as NNLatentUpscale can still be used by someone who wants it, but it is not part of the recommended MrFlow path because it uses separate trained weights.
+
 ## Added nodes
 
 - `MrFlow Tiled Plan`
@@ -19,24 +34,23 @@ A normal full-frame high-resolution refine can run out of VRAM at 2048, 3072, 40
 - `MrFlow Tiled VAE Decode`
   - Uses `vae.decode_tiled` when available, with fallback to normal decode.
 - `MrFlow Latent Upscale + Noise`
-  - Lightweight latent resize fallback plus optional Gaussian noise.
-  - This is not a replacement for `ComfyUi_NNLatentUpscale`, but it can be used when that node is not installed.
+  - Lightweight interpolation-based latent resize fallback plus optional Gaussian noise.
+  - This is not a learned latent super-resolution model.
 - `MrFlow Latent Noise Inject`
-  - Adds controlled latent noise after any latent upscaler, including `ComfyUi_NNLatentUpscale`.
+  - Adds controlled latent noise before a refine pass.
 - `MrFlow Tiled Latent Refine`
   - Runs the MrFlow direct-sigma refine on overlapping latent tiles.
   - Stitches the refined latent tiles back together.
 - `MrFlow Tiled Save Image`
   - Save helper for tiled outputs.
 
-## Recommended high-quality chain
+## Recommended training-free high-quality chain
 
 ```text
 Krea2 low-res generation
 → VAE Decode
 → MrFlow Tiled Pixel Upscale
 → MrFlow Tiled VAE Encode
-→ optional ComfyUi_NNLatentUpscale
 → MrFlow Latent Noise Inject
 → MrFlow Tiled Latent Refine
 → MrFlow Tiled Save Image
@@ -76,12 +90,6 @@ latent_overlap: 32
 denoise: 0.04 - 0.10
 steps: 1
 ```
-
-## Notes on ComfyUi_NNLatentUpscale
-
-`ComfyUi_NNLatentUpscale` is useful because it upscales latents with a learned neural resizer instead of only bicubic/bilinear interpolation. Use it between tiled VAE encode and tiled latent refine if it is installed.
-
-This add-on does not vendor or copy the NNLatentUpscale model weights/code. Instead, it adds noise/refine nodes that can sit after NNLatentUpscale in a workflow.
 
 ## Quality notes
 
