@@ -21,7 +21,8 @@ def _load_module(module_name: str, filename: str):
 
 _QWEN_MODULE = _load_module("mrflow_qwen_nodes", "nodes_mrflow_qwen.py")
 _KREA2_MODULE = _load_module("mrflow_krea2_nodes", "nodes_mrflow_krea2.py")
-_MODULES = (_QWEN_MODULE, _KREA2_MODULE)
+_TILED_MODULE = _load_module("mrflow_tiled_nodes", "nodes_mrflow_tiled.py")
+_MODULES = (_QWEN_MODULE, _KREA2_MODULE, _TILED_MODULE)
 
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
